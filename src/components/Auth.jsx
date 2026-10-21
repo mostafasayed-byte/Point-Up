@@ -141,6 +141,7 @@ export function VerifyPage({ initial }) {
       if (!r || r.exists === false || r.valid === false || r.found === false) setRes(fail('❌ لا يوجد مستند بهذا الرقم التسلسلي'));
       else {
         const kind = r.type || r.kind;
+        if (r.status === 'void') return setRes(fail('⚠️ هذا الإيصال ملغي — الرقم: ' + (r.doc_no || r.no || s) + '، صدر بتاريخ: ' + (r.issued_on || r.stamped_on || 'غير متاح') + '. لا يُعتد به كإثبات سداد.'));
         setRes({ text: '✅ مستند أصلي صادر من ' + (r.issuer || r.org_name || r.organization_name || 'بوينت أب') + ' — النوع: ' + (kind ? typeName(kind) : 'مستند') + '، الرقم: ' + (r.doc_no || r.no || r.document_no || r.file_name || s) + '، بتاريخ: ' + (r.doc_date || r.issued_on || r.stamped_on || r.date || 'غير متاح'), ok: true });
       }
     } catch (e) {

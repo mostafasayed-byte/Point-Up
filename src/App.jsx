@@ -10,6 +10,8 @@ import InvoiceTab from './components/InvoiceTab';
 import HistoryTab from './components/HistoryTab';
 import AlbumsTab from './components/AlbumsTab';
 import StampTab from './components/StampTab';
+import ContractTab from './components/ContractTab';
+import ReceiptTab from './components/ReceiptTab';
 
 function verifyParam() {
   const q = new URLSearchParams(location.search).get('verify');
@@ -111,7 +113,7 @@ function Shell() {
   }
 }
 
-const TABS = [['t1', 'فاتورة جديدة'], ['t2', 'سجل الفواتير'], ['t4', 'ألبومات'], ['t3', 'ختم ملف']];
+const TABS = [['t1', 'فاتورة جديدة'], ['t2', 'سجل الفواتير'], ['t4', 'ألبومات'], ['t3', 'ختم ملف'], ['t5', 'عقود'], ['t6', 'إيصالات']];
 
 function Main({ ms, setMs, user, logout }) {
   const [tab, setTab] = useState('t1');
@@ -164,6 +166,8 @@ function Main({ ms, setMs, user, logout }) {
         <div className="tab" hidden={tab !== 't2'}><HistoryTab active={tab === 't2'} /></div>
         <div className="tab" hidden={tab !== 't4'}><AlbumsTab active={tab === 't4'} /></div>
         <div className="tab" hidden={tab !== 't3'}><StampTab active={tab === 't3'} /></div>
+        <div className="tab" hidden={tab !== 't5'}><ContractTab /></div>
+        <div className="tab" hidden={tab !== 't6'}><ReceiptTab active={tab === 't6'} /></div>
       </main>
       {showPartners && <Partners org={ms.org} onClose={() => setShowPartners(false)} />}
     </AppCtx.Provider>

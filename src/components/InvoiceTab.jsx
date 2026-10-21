@@ -5,14 +5,13 @@ import { issueDocument, saveSettings, uploadBlob, removeFiles, fileUrl, attachme
 import { docCanvases, docAssets, QR_DEFAULT } from '../lib/docRender';
 import { exportDoc, shareDoc, waDoc, sendOpts, prewarmDoc } from '../lib/docActions';
 import { toImgUrl } from '../lib/watermark';
-import { fmt, nz, today, totals, boqTotal, shrinkToBlob, uuid, getPref, setPref, errMsg } from '../lib/util';
+import { fmt, nz, today, totals, boqTotal, shrinkToBlob, uuid, getPref, setPref, errMsg, coFrom } from '../lib/util';
 import { useApp, Msg, PagesView, Check, busy, fail } from './common';
 import BoqEditor, { blankSec, withIds, cleanBoq, parseBoqRows } from './BoqEditor';
 import SendDialog from './SendDialog';
 
 const PENDING_NO = 'سيُحدَّد عند الإصدار';
 const blankItem = () => ({ id: uuid(), d: '', q: '', p: '' });
-const coFrom = (s) => ({ addr: s.addr || '', phone: s.phone || '', tax: s.tax || '', cr: s.cr == null || s.cr === '' ? '313026' : s.cr, cc: s.cc || '', cur: s.cur || '' });
 
 export default function InvoiceTab({ cloneReq }) {
   const app = useApp();

@@ -34,6 +34,12 @@ export async function ready() {
 
 /* شبكة لوجو مائلة −30° + الرقم التسلسلي + شريط سفلي */
 export function paintMark(x, w, h, op, serial, date, logoImg) {
+  paintGrid(x, w, h, op, serial, logoImg);
+  paintBar(x, w, h, serial, date);
+}
+
+/* شبكة اللوجو المائلة مع الرقم التسلسلي فقط (بدون الشريط السفلي) */
+export function paintGrid(x, w, h, op, serial, logoImg) {
   const lw = Math.min(w, h) * 0.28, lh = (lw * logoImg.naturalHeight) / logoImg.naturalWidth, gx = lw * 1.5, gy = lh * 2.7, R = Math.hypot(w, h) / 2, fs = Math.max(10, Math.round(lw * 0.09));
   x.save();
   x.translate(w / 2, h / 2);
@@ -54,6 +60,9 @@ export function paintMark(x, w, h, op, serial, date, logoImg) {
     }
   }
   x.restore();
+}
+
+function paintBar(x, w, h, serial, date) {
   const fh = Math.max(30, Math.round(h * 0.04));
   x.save();
   x.fillStyle = 'rgba(15,12,8,0.78)';

@@ -179,6 +179,74 @@ export async function deleteAlbum(album) {
   await removeFiles(photos.map((p) => p.storage_path));
 }
 
+/* ===== العقود: رقم + سيريال فقط، محتوى العقد لا يُرسل ===== */
+export async function issueContract({ ctype, client }) {
+  return withSerialRetry((serial) => supabase.rpc('issue_contract', { p: { serial, ctype, client } }));
+}
+
+/* ===== إيصالات النقدية: تُصدر وتُلغى عبر RPC فقط ===== */
+export async function issueReceipt(payload) {
+  return withSerialRetry((serial) => supabase.rpc('issue_receipt', { p: { ...payload, serial } }));
+}
+
+export async function voidReceipt(id, reason) {
+  return one(check(await supabase.rpc('void_receipt', { p_id: id, p_reason: reason })));
+}
+
+/* مطابقة تامة بدون حساسية لحالة الأحرف في ilike */
+const exactLike = (s) => String(s || '').trim().replace(/[\\%_]/g, (c) => '\\' + c);
+
+function rcFilter(query, { q, status, from, to }) {
+  if (status && status !== 'all') query = query.eq('status', status);
+  if (from) query = query.gte('receipt_date', from);
+  if (to) query = query.lte('receipt_date', to);
+  const s = safeQ(q);
+  if (s) query = query.or(`client.ilike.%${s}%,project.ilike.%${s}%,no.ilike.%${s}%`);
+  return query;
+}
+
+export async function listReceipts({ page = 0, ...f }) {
+  const query = rcFilter(supabase.from('receipts').select('*', { count: 'exact' }), f)
+    .order('created_at', { ascending: false }).range(page * PAGE, page * PAGE + PAGE - 1);
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { rows: data || [], count: count || 0 };
+}
+
+export async function allReceipts(f) {
+  return fetchAll(() => rcFilter(supabase.from('receipts').select('*'), f).order('created_at', { ascending: false }));
+}
+
+/* إجمالي الإيصالات السارية لنفس العميل والمشروع (قبل إيصال معيّن إن حُدد) */
+export async function paidBefore(client, project, before) {
+  const rows = await fetchAll(() => {
+    const query = supabase.from('receipts').select('amount').eq('status', 'active').ilike('client', exactLike(client)).ilike('project', exactLike(project));
+    return before ? query.lt('created_at', before) : query;
+  });
+  return rows.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+}
+
+/* أسماء العملاء ومشاريعهم من المستندات والألبومات والإيصالات (للاقتراح التلقائي) */
+let clientsP = null;
+export function knownClients() {
+  if (!clientsP) {
+    const get = (t) => supabase.from(t).select('client,project').order('created_at', { ascending: false }).limit(200).then(({ data }) => data || [], () => []);
+    clientsP = Promise.all([get('documents'), get('albums'), get('receipts')]).then((all) => {
+      const m = new Map();
+      all.flat().forEach((r) => {
+        const c = String(r.client || '').trim();
+        if (!c) return;
+        const k = c.toLowerCase();
+        if (!m.has(k)) m.set(k, { name: c, projects: new Set() });
+        if (r.project && String(r.project).trim()) m.get(k).projects.add(String(r.project).trim());
+      });
+      return m;
+    });
+  }
+  return clientsP;
+}
+export const forgetClients = () => { clientsP = null; };
+
 /* ===== سجل الأرقام ===== */
 export async function addStamp({ orgId, serial, file_name, note }) {
   return check(await supabase.from('stamp_register').insert({ org_id: orgId, serial, kind: 'stamp', stamped_on: today(), file_name, note: note || null }));

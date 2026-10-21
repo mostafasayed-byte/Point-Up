@@ -27,7 +27,10 @@ export const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().
 export const normPhone = (p) => String(p || '').replace(/\D/g, '');
 
 export const typeLabel = (t) => (t === 'quote' ? 'عرض السعر' : t === 'boq' ? 'المقايسة' : 'الفاتورة');
-export const typeName = (t) => (t === 'quote' ? 'عرض سعر' : t === 'boq' ? 'مقايسة' : t === 'album' ? 'ألبوم صور' : t === 'stamp' ? 'ملف مختوم' : 'فاتورة');
+export const typeName = (t) => (t === 'quote' ? 'عرض سعر' : t === 'boq' ? 'مقايسة' : t === 'album' ? 'ألبوم صور' : t === 'stamp' ? 'ملف مختوم' : t === 'contract' ? 'عقد' : t === 'receipt' ? 'إيصال' : 'فاتورة');
+
+/* بيانات الشركة من الإعدادات (نفس القيم الافتراضية في كل المستندات) */
+export const coFrom = (s) => ({ addr: s.addr || '', phone: s.phone || '', tax: s.tax || '', cr: s.cr == null || s.cr === '' ? '313026' : s.cr, cc: s.cc || '', cur: s.cur || '' });
 
 export const pagesLabel = (n) => (n > 2 ? n + ' صفحات' : n === 2 ? 'صفحتان' : 'صفحة واحدة');
 

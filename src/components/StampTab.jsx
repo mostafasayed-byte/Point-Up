@@ -85,7 +85,7 @@ export default function StampTab({ active }) {
     try {
       const rows = await allStamps();
       const q = (s) => '"' + String(s ?? '').replace(/"/g, '""') + '"';
-      const t = '\uFEFFserial,date,kind,file,note\n' + rows.map((r) => [r.serial, r.stamped_on, r.kind, r.file_name, r.note].map(q).join(',')).join('\n');
+      const t = '\uFEFFserial,date,kind,file,note\n' + rows.map((r) => [r.serial, r.stamped_on, r.kind === 'contract' || r.kind === 'receipt' ? typeName(r.kind) : r.kind, r.file_name, r.note].map(q).join(',')).join('\n');
       setCsvMsg(await doSave('pointup-register-' + today() + '.csv', new Blob([t], { type: 'text/csv;charset=utf-8' })));
     } catch (e) {
       setCsvMsg(fail('تعذر التصدير: ' + arErr(e)));
@@ -142,7 +142,7 @@ export default function StampTab({ active }) {
         )}
         <button className="alt" type="button" style={{ marginTop: 10 }} onClick={csv}>حفظ السجل (CSV)</button>
         <Msg m={csvMsg} />
-        <p className="note">السجل محفوظ في السحابة ومشترك بين الشريكين، ويضم كل الفواتير والعروض والمقايسات والألبومات والملفات المختومة. عند الشك في مستند، تحقق من رقمه عبر رابط التحقق المطبوع أسفل كل صفحة.</p>
+        <p className="note">السجل محفوظ في السحابة ومشترك بين الشريكين، ويضم كل الفواتير والعروض والمقايسات والألبومات والعقود والإيصالات والملفات المختومة. عند الشك في مستند، تحقق من رقمه عبر رابط التحقق المطبوع أسفل كل صفحة.</p>
       </section>
     </>
   );
