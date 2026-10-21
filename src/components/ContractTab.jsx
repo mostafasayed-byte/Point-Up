@@ -12,7 +12,7 @@ const PENDING_NO = 'يُحدَّد عند الإصدار';
 function issueErr(e) {
   const m = String((e && e.message) || '');
   if ((e && (e.code === 'PGRST202' || e.code === '42883' || e.code === '23514')) || /issue_contract|stamp_register_kind_check/i.test(m)) {
-    return 'خدمة العقود غير مفعّلة في قاعدة البيانات. شغّل ملف supabase/contracts_migration.sql في Supabase ثم أعد المحاولة.';
+    return 'خدمة العقود غير مفعّلة في قاعدة البيانات. شغّل ملف supabase/contracts_migration.sql في Supabase ثم أعد المحاولة.' + ' [' + ((e && e.code) || '') + ': ' + m + ']';
   }
   return arErr(e);
 }

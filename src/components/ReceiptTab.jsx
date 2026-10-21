@@ -21,7 +21,7 @@ function cleanAmt(v) {
 function rcErr(e) {
   const m = String((e && e.message) || '');
   if ((e && (e.code === 'PGRST202' || e.code === '42883' || e.code === '42P01')) || /issue_receipt|void_receipt|relation .*receipts/i.test(m)) {
-    return 'خدمة الإيصالات غير مفعّلة في قاعدة البيانات. شغّل ملف supabase/receipts_migration.sql في Supabase ثم أعد المحاولة.';
+    return 'خدمة الإيصالات غير مفعّلة في قاعدة البيانات. شغّل ملف supabase/receipts_migration.sql في Supabase ثم أعد المحاولة.' + ' [' + ((e && e.code) || '') + ': ' + m + ']';
   }
   if (/client_required/.test(m)) return 'اسم العميل مطلوب.';
   if (/amount_required/.test(m)) return 'المبلغ يجب أن يكون أكبر من صفر.';
