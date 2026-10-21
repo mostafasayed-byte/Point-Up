@@ -184,6 +184,16 @@ export async function issueContract({ ctype, client }) {
   return withSerialRetry((serial) => supabase.rpc('issue_contract', { p: { serial, ctype, client } }));
 }
 
+/* سجل العقود الصادرة من سجل الأرقام (الرقم، التاريخ، النوع واسم العميل في الملاحظة) */
+export async function listContracts({ page = 0, q = '' }) {
+  let query = supabase.from('stamp_register').select('serial,stamped_on,file_name,note,created_at', { count: 'exact' }).eq('kind', 'contract');
+  const s = safeQ(q);
+  if (s) query = query.or(`file_name.ilike.%${s}%,note.ilike.%${s}%,serial.ilike.%${s}%`);
+  const { data, error, count } = await query.order('created_at', { ascending: false }).range(page * PAGE, page * PAGE + PAGE - 1);
+  if (error) throw error;
+  return { rows: data || [], count: count || 0 };
+}
+
 /* ===== إيصالات النقدية: تُصدر وتُلغى عبر RPC فقط ===== */
 export async function issueReceipt(payload) {
   return withSerialRetry((serial) => supabase.rpc('issue_receipt', { p: { ...payload, serial } }));

@@ -166,7 +166,7 @@ function Main({ ms, setMs, user, logout }) {
         <div className="tab" hidden={tab !== 't2'}><HistoryTab active={tab === 't2'} /></div>
         <div className="tab" hidden={tab !== 't4'}><AlbumsTab active={tab === 't4'} /></div>
         <div className="tab" hidden={tab !== 't3'}><StampTab active={tab === 't3'} /></div>
-        <div className="tab" hidden={tab !== 't5'}><ContractTab /></div>
+        <div className="tab" hidden={tab !== 't5'}><ContractTab active={tab === 't5'} /></div>
         <div className="tab" hidden={tab !== 't6'}><ReceiptTab active={tab === 't6'} /></div>
       </main>
       {showPartners && <Partners org={ms.org} onClose={() => setShowPartners(false)} />}

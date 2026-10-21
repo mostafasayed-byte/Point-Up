@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { arErr } from '../lib/supabase';
-import { issueContract, saveSettings } from '../lib/api';
-import { CTYPES, OWNER, REP, builtin, tplFor, blankContract, loadDraft, saveDraft, newClause, conHtml, conText } from '../lib/contract';
-import { today, coFrom } from '../lib/util';
+import { issueContract, saveSettings, listContracts } from '../lib/api';
+import { CTYPES, OWNER, REP, builtin, tplFor, blankContract, loadDraft, saveDraft, newClause, conHtml, conText, arDate } from '../lib/contract';
+import { today, coFrom, copyText, verifyUrl } from '../lib/util';
 import { useApp, Msg, busy, fail } from './common';
 import PrintPreview from './PrintPreview';
 
@@ -17,7 +17,7 @@ function issueErr(e) {
   return arErr(e);
 }
 
-export default function ContractTab() {
+export default function ContractTab({ active }) {
   const app = useApp();
   const { org, settings } = app;
   const [d, setD] = useState(() => loadDraft() || blankContract('تشطيبات', settings));
@@ -198,6 +198,8 @@ export default function ContractTab() {
         <p className="note">يُحفظ العقد تلقائيًا كمسودة على هذا الجهاز فقط ولا يُرسل محتواه لقاعدة البيانات. عند الإصدار يُسجَّل رقم العقد والرقم التسلسلي ونوع العقد واسم العميل فقط للتحقق، وإعادة الطباعة تستخدم نفس الرقم.</p>
       </section>
 
+      <ContractHistory active={active} />
+
       {preview && (
         <PrintPreview
           fileName={fin ? 'عقد_' + d.no + '_' + d.serial : 'عقد_مسودة'}
@@ -210,5 +212,77 @@ export default function ContractTab() {
         />
       )}
     </>
+  );
+}
+
+/* سجل العقود الصادرة: من سجل الأرقام فقط (محتوى العقد غير محفوظ) */
+function ContractHistory({ active }) {
+  const app = useApp();
+  const [q, setQ] = useState('');
+  const [dq, setDq] = useState('');
+  const [rows, setRows] = useState(null);
+  const [count, setCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+  const [msg, setMsg] = useState(null);
+  const reqId = useRef(0);
+
+  useEffect(() => { const t = setTimeout(() => setDq(q), 350); return () => clearTimeout(t); }, [q]);
+
+  const load = async (pg) => {
+    const id = ++reqId.current;
+    setLoading(true);
+    setErr('');
+    try {
+      const d = await listContracts({ page: pg, q: dq });
+      if (id !== reqId.current) return;
+      setRows((r) => (pg === 0 ? d.rows : [...(r || []), ...d.rows]));
+      setCount(d.count);
+      setPage(pg);
+    } catch (e) {
+      if (id === reqId.current) setErr(arErr(e));
+    } finally {
+      if (id === reqId.current) setLoading(false);
+    }
+  };
+
+  useEffect(() => { if (active) load(0); }, [active, dq, app.stampVer]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* الملاحظة محفوظة بصيغة «النوع - اسم العميل» */
+  const split = (note) => {
+    const n = String(note || ''), i = n.indexOf(' - ');
+    return i < 0 ? { type: '', client: n } : { type: n.slice(0, i), client: n.slice(i + 3) };
+  };
+
+  return (
+    <section>
+      <h2>سجل العقود الصادرة {rows ? '(' + count + ')' : ''}</h2>
+      <label htmlFor="ch_q">بحث بالرقم أو اسم العميل أو النوع</label>
+      <input type="text" id="ch_q" className="rtl" value={q} onChange={(e) => setQ(e.target.value)} />
+      <Msg m={msg} />
+      {err && <div><Msg m={fail('تعذر تحميل السجل: ' + err)} /><button className="alt" type="button" onClick={() => load(0)}>إعادة المحاولة</button></div>}
+      {!rows && !err && <div className="note"><span className="spin" />جارٍ التحميل…</div>}
+      {rows && !rows.length && <p className="note">{dq ? 'لا توجد عقود بهذا البحث.' : 'لم يصدر أي عقد بعد.'}</p>}
+      {rows && rows.map((r) => {
+        const n = split(r.note);
+        return (
+          <div className="inv" key={r.serial}>
+            <div className="bf" style={{ marginTop: 0 }}>
+              <b>{r.file_name}</b>
+              <span className="note" style={{ margin: 0 }}>{arDate(r.stamped_on)}</span>
+            </div>
+            <div style={{ fontWeight: 700 }}>{n.client || '—'}{n.type ? ' — عقد ' + n.type : ''}</div>
+            <div className="note" style={{ marginTop: 2 }}>الرقم التسلسلي: <span dir="ltr">{r.serial}</span></div>
+            <div className="acts">
+              <button className="alt sm" type="button" onClick={async () => setMsg((await copyText(r.serial)) ? 'تم نسخ الرقم التسلسلي.' : fail('تعذر النسخ التلقائي.'))}>نسخ الرقم التسلسلي</button>
+              <button className="alt sm" type="button" onClick={async () => setMsg((await copyText(verifyUrl(r.serial))) ? 'تم نسخ رابط التحقق.' : fail('تعذر النسخ التلقائي.'))}>نسخ رابط التحقق</button>
+            </div>
+          </div>
+        );
+      })}
+      {rows && rows.length < count && <button className="alt big" type="button" disabled={loading} onClick={() => load(page + 1)}>{loading ? 'جارٍ التحميل…' : 'تحميل المزيد (' + rows.length + ' من ' + count + ')'}</button>}
+      <p className="note">العقود تُطبع وتُوقَّع ورقيًا، لذلك يحفظ السجل الرقم والتاريخ والنوع واسم العميل والرقم التسلسلي فقط ولا يمكن إعادة فتح نص عقد قديم.</p>
+    </section>
   );
 }
