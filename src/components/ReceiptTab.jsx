@@ -40,6 +40,7 @@ export default function ReceiptTab({ active }) {
   const { org, settings, member } = app;
   const who = (member && member.display_name) || '';
   const [f, setF] = useState(() => blankForm(who));
+  const [showIds, setShowIds] = useState({ cr: true, tax: true });
   const [keepClient, setKeepClient] = useState(false);
   const [open, setOpen] = useState(true);
   const [clients, setClients] = useState(null);
@@ -78,7 +79,7 @@ export default function ReceiptTab({ active }) {
     receipt_date: f.date || today(), client: f.client.trim(), client_phone: f.phone.trim() || null, project: f.project.trim() || null,
     amount: Number(f.amount) || 0, amount_words: words, currency: co.cur.trim() || null, purpose, notes: f.notes.trim() || null,
     contract_total: Number(f.total) > 0 ? Number(f.total) : null, received_by: f.by.trim() || null,
-    company_snapshot: { ...co, name: org.name },
+    company_snapshot: { ...co, name: org.name, show_cr: showIds.cr, show_tax: showIds.tax },
   });
 
   const validate = () => {
@@ -163,6 +164,10 @@ export default function ReceiptTab({ active }) {
             </div>
             <label htmlFor="r_notes">ملاحظات (اختياري)</label>
             <textarea id="r_notes" className="cx-ta" rows={2} value={f.notes} onChange={(e) => set('notes', e.target.value)} />
+            <div className="g2" style={{ marginTop: 10 }}>
+              <label className="check"><input type="checkbox" checked={showIds.cr} onChange={(e) => setShowIds((x) => ({ ...x, cr: e.target.checked }))} /> إظهار السجل التجاري</label>
+              <label className="check"><input type="checkbox" checked={showIds.tax} onChange={(e) => setShowIds((x) => ({ ...x, tax: e.target.checked }))} /> إظهار الرقم الضريبي</label>
+            </div>
             <p className="note">طريقة السداد: <b>نقدًا</b></p>
             {prev && (
               <div className="note">

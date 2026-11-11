@@ -20,7 +20,7 @@ export function balance(r, prev) {
 }
 
 const coLines = (co) => {
-  const l = [co.addr && esc(co.addr), co.phone && '<span dir="ltr">' + esc(co.phone) + '</span>', co.cr && 'السجل التجاري: ' + esc(co.cr), co.tax && 'الرقم الضريبي: ' + esc(co.tax)].filter(Boolean);
+  const l = [co.addr && esc(co.addr), co.phone && '<span dir="ltr">' + esc(co.phone) + '</span>', co.cr && co.show_cr !== false && 'السجل التجاري: ' + esc(co.cr), co.tax && co.show_tax !== false && 'الرقم الضريبي: ' + esc(co.tax)].filter(Boolean);
   return l.length ? [l.join(' — ')] : [];
 };
 

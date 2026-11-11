@@ -25,6 +25,7 @@ export default function ContractTab({ active }) {
   const [working, setWorking] = useState(false);
   const [msg, setMsg] = useState(null);
   const [tplMsg, setTplMsg] = useState(null);
+  const [showIds, setShowIds] = useState({ cr: true, tax: true });
   const busyRef = useRef(false);
 
   useEffect(() => { saveDraft(d); }, [d]);
@@ -157,7 +158,11 @@ export default function ContractTab({ active }) {
           <div>{T('اسم الممثل عن الشركة', d.p2.name, (v) => setP('p2', 'name', v))}</div>
           <div>{T('صفته', d.p2.title, (v) => setP('p2', 'title', v))}</div>
         </div>
-        <p className="note">العنوان والسجل التجاري والرقم الضريبي تُطبع تلقائيًا من بيانات الشركة (الموجود منها فقط).</p>
+        <p className="note">بيانات الشركة محفوظة، ويمكنك اختيار ما يظهر في هذا العقد فقط.</p>
+        <div className="g2">
+          <label className="check"><input type="checkbox" checked={showIds.cr} onChange={(e) => setShowIds((x) => ({ ...x, cr: e.target.checked }))} /> إظهار السجل التجاري</label>
+          <label className="check"><input type="checkbox" checked={showIds.tax} onChange={(e) => setShowIds((x) => ({ ...x, tax: e.target.checked }))} /> إظهار الرقم الضريبي</label>
+        </div>
       </section>
 
       <section>
@@ -208,7 +213,7 @@ export default function ContractTab({ active }) {
           text={conText(d, no)}
           phone={d.p1.phone}
           onClose={() => setPreview(null)}
-          build={(o) => conHtml(d, { ...o, no, serial, draft: !fin, date: fin ? d.issued_on || today() : today(), co })}
+          build={(o) => conHtml(d, { ...o, no, serial, draft: !fin, date: fin ? d.issued_on || today() : today(), co: { ...co, show_cr: showIds.cr, show_tax: showIds.tax } })}
         />
       )}
     </>

@@ -61,7 +61,7 @@ const liveClauses = (d) => d.clauses.filter((c) => c.t.trim() || c.x.trim());
 const isRep = (p) => p.cap !== OWNER;
 
 /* بيانات الطرف الثاني الاختيارية من إعدادات الشركة (الموجودة فقط) */
-const coLine = (co) => [co.addr && 'العنوان: ' + esc(co.addr), co.cr && 'السجل التجاري: ' + esc(co.cr), co.tax && 'الرقم الضريبي: ' + esc(co.tax)].filter(Boolean).join(' — ');
+const coLine = (co) => [co.addr && 'العنوان: ' + esc(co.addr), co.cr && co.show_cr !== false && 'السجل التجاري: ' + esc(co.cr), co.tax && co.show_tax !== false && 'الرقم الضريبي: ' + esc(co.tax)].filter(Boolean).join(' — ');
 
 /* ورقة العقد. o: {po, logo, wm, no, serial, date(footer), draft, co} */
 export function conHtml(d, o) {

@@ -19,6 +19,7 @@ export default function InvoiceTab({ cloneReq }) {
   const [type, setType] = useState('invoice');
   const [co, setCo] = useState(() => coFrom(settings));
   const [coMsg, setCoMsg] = useState(null);
+  const [showIds, setShowIds] = useState({ cr: true, tax: true });
   const [qrMsg, setQrMsg] = useState({});
   const [date, setDate] = useState(today());
   const [client, setClient] = useState('');
@@ -101,7 +102,7 @@ export default function InvoiceTab({ cloneReq }) {
 
   /* ===== بناء المستند ===== */
   const buildDoc = () => {
-    const snapshot = { ...settings, ...co, name: org.name };
+    const snapshot = { ...settings, ...co, name: org.name, show_cr: showIds.cr, show_tax: showIds.tax };
     const base = { type, doc_date: date || today(), client: client.trim(), client_phone: cphone.trim() || null, project: proj.trim() || null, notes: notes.trim(), currency: co.cur.trim(), company_snapshot: snapshot };
     if (B) {
       const boq = cleanBoq(secs);
@@ -266,6 +267,10 @@ export default function InvoiceTab({ cloneReq }) {
               <Msg m={qrMsg[k] || (settings['qr_' + k + '_path'] ? 'تم حفظ QR Code.' : 'اختياري: يمكنك رفعه لاحقًا من هنا.')} />
             </div>
           ))}
+          <div className="g2" style={{ marginTop: 10 }}>
+            <label className="check"><input type="checkbox" checked={showIds.cr} onChange={(e) => setShowIds((x) => ({ ...x, cr: e.target.checked }))} /> إظهار السجل التجاري في هذا المستند</label>
+            <label className="check"><input type="checkbox" checked={showIds.tax} onChange={(e) => setShowIds((x) => ({ ...x, tax: e.target.checked }))} /> إظهار الرقم الضريبي في هذا المستند</label>
+          </div>
           <label htmlFor="c_cc">رمز الدولة لأرقام واتساب (مثال: 20 لمصر، 966 للسعودية)</label>
           <input type="text" id="c_cc" className="ltr" inputMode="numeric" value={co.cc} onChange={(e) => setCo({ ...co, cc: e.target.value })} />
           <label htmlFor="c_cur">العملة (تظهر بجانب المبالغ)</label>

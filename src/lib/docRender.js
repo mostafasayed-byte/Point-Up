@@ -41,8 +41,8 @@ export async function docCanvases(doc, assets) {
     if (!isQ) {
       if (co.addr) { T(co.addr, 24, R, y, 'right', '#6d6354'); y += 34; }
       if (co.phone) { x.direction = 'ltr'; T(co.phone, 24, R, y, 'right', '#6d6354'); x.direction = 'rtl'; y += 34; }
-      if (co.cr) { T('السجل التجاري: ' + co.cr, 24, R, y, 'right', '#6d6354'); y += 34; }
-      if (co.tax) T('الرقم الضريبي: ' + co.tax, 24, R, y, 'right', '#6d6354');
+      if (co.cr && co.show_cr !== false) { T('السجل التجاري: ' + co.cr, 24, R, y, 'right', '#6d6354'); y += 34; }
+      if (co.tax && co.show_tax !== false) T('الرقم الضريبي: ' + co.tax, 24, R, y, 'right', '#6d6354');
     }
     x.fillStyle = '#a97608';
     x.fillRect(L, 400, R - L, 4);
@@ -264,7 +264,7 @@ export async function docXlsx(doc) {
   const XLSX = await xlsxLib();
   if (doc.type === 'boq') return boqXlsx(XLSX, doc);
   const co = doc.company_snapshot || {}, cu = doc.currency || '', isQ = doc.type === 'quote';
-  const A = [['بوينت أب | Point Up'], ...(isQ ? [] : [[co.addr || ''], [co.phone || ''], [co.cr ? 'السجل التجاري: ' + co.cr : ''], [co.tax ? 'الرقم الضريبي: ' + co.tax : '']]), [], [isQ ? 'عرض سعر رقم' : 'فاتورة رقم', doc.no, '', 'التاريخ', doc.doc_date], ['العميل', doc.client, '', 'الهاتف', doc.client_phone || ''], ['المشروع', doc.project || ''], [], ['م', 'البيان', 'الكمية', 'سعر الوحدة', 'الإجمالي']];
+  const A = [['بوينت أب | Point Up'], ...(isQ ? [] : [[co.addr || ''], [co.phone || ''], [co.cr && co.show_cr !== false ? 'السجل التجاري: ' + co.cr : ''], [co.tax && co.show_tax !== false ? 'الرقم الضريبي: ' + co.tax : '']]), [], [isQ ? 'عرض سعر رقم' : 'فاتورة رقم', doc.no, '', 'التاريخ', doc.doc_date], ['العميل', doc.client, '', 'الهاتف', doc.client_phone || ''], ['المشروع', doc.project || ''], [], ['م', 'البيان', 'الكمية', 'سعر الوحدة', 'الإجمالي']];
   const f = A.length + 1, items = doc.items || [];
   items.forEach((it, i) => A.push([i + 1, it.d, nz(it.q), nz(it.p), { t: 'n', v: nz(it.q) * nz(it.p), f: 'C' + (f + i) + '*D' + (f + i) }]));
   const l = f + items.length - 1, s = l + 2;
