@@ -17,6 +17,7 @@ npm run build      # بناء نسخة الإنتاج في dist/
 - **ترحيلات مطلوبة** (Supabase ← SQL Editor ← New query ← Run، بالترتيب):
   1. `supabase/contracts_migration.sql` — تبويب «عقود»: رقم `CON-YYYY-0001` + تسجيل السيريال فقط (محتوى العقد لا يُحفظ).
   2. `supabase/receipts_migration.sql` — تبويب «إيصالات»: جدول `receipts` + `issue_receipt` / `void_receipt` + `verify_serial` يعرض حالة الإلغاء.
+  3. `supabase/customers_migration.sql` — تبويب «العملاء»: دليل عملاء مشترك بين الشريكين مع الهاتف والعنوان والمشروعات والملاحظات.
 
 ## النشر على Vercel
 1. Import المستودع من GitHub في Vercel (يتعرّف تلقائياً على Vite؛ الإعدادات في `vercel.json`).
@@ -34,6 +35,8 @@ npm run build      # بناء نسخة الإنتاج في dist/
 | `src/lib/printDoc.js`, `components/PrintPreview.jsx` | طباعة HTML مشتركة: علامة مائية + سيريال + شريط سفلي في كل صفحة، وخيارات الطباعة |
 | `src/lib/contract.js`, `components/ContractTab.jsx` | العقود (إشراف / تشطيبات / توريدات) — مسودة على الجهاز فقط |
 | `src/lib/receipt.js`, `tafqeet.js`, `components/ReceiptTab.jsx` | إيصالات استلام النقدية + التفقيط (اختبار: `node src/lib/tafqeet.test.js`) |
+| `src/components/CustomersTab.jsx` | دليل العملاء وإضافة/تعديل/حذف بيانات العميل |
+| `src/components/ReportsTab.jsx` | التقارير المالية بالفترة والعميل والمشروع وتصدير CSV |
 | `reference/` | النماذج المرجعية الأصلية للعقد والإيصال |
 
 ## ملاحظات

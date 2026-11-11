@@ -257,6 +257,20 @@ export function knownClients() {
 }
 export const forgetClients = () => { clientsP = null; };
 
+/* ===== دليل العملاء ===== */
+export async function listCustomers() {
+  return check(await supabase.from('customers').select('*').order('name', { ascending: true })) || [];
+}
+
+export async function saveCustomer(c, orgId) {
+  const row = { ...(c.id ? { id: c.id } : {}), org_id: orgId, name: c.name, phone: c.phone || null, address: c.address || null, notes: c.notes || null, projects: c.projects || [] };
+  return check(await supabase.from('customers').upsert(row, { onConflict: 'org_id,name' }).select().single());
+}
+
+export async function deleteCustomer(id) {
+  return check(await supabase.from('customers').delete().eq('id', id).select('id'));
+}
+
 /* ===== سجل الأرقام ===== */
 export async function addStamp({ orgId, serial, file_name, note }) {
   return check(await supabase.from('stamp_register').insert({ org_id: orgId, serial, kind: 'stamp', stamped_on: today(), file_name, note: note || null }));
