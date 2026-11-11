@@ -13,10 +13,7 @@ export const QR_DEFAULT = { wa: '/qr-wa-default.jpg', fb: '/qr-fb-default.jpg' }
 export async function docAssets(doc) {
   const co = doc.company_snapshot || {};
   const qr = {};
-  for (const k of ['wa', 'fb']) {
-    const p = co['qr_' + k + '_path'];
-    try { qr[k] = p ? await fileUrl(p) : QR_DEFAULT[k]; } catch (e) { qr[k] = QR_DEFAULT[k]; }
-  }
+  for (const k of ['wa', 'fb']) { const p = co['qr_' + k + '_path']; try { qr[k] = p ? await fileUrl(p) : QR_DEFAULT[k]; } catch (e) { qr[k] = QR_DEFAULT[k]; } }
   const imgs = [];
   for (const p of attachmentPaths(doc.attachments)) imgs.push(await fileUrl(p));
   return { qr, imgs };
@@ -24,7 +21,7 @@ export async function docAssets(doc) {
 
 export async function docCanvases(doc, assets) {
   assets = assets || (await docAssets(doc));
-  if (doc.type === 'boq') return boqCanvases(doc);
+  if (doc.type === 'boq') return boqCanvases(doc, assets);
   const logoImg = await ready();
   const items = doc.items || [];
   const W = 1240, H = 1754, per = 12, pages = Math.max(1, Math.ceil(items.length / per)), out = [], R = W - 70, L = 70, cur = doc.currency || '';
@@ -103,20 +100,9 @@ export async function docCanvases(doc, assets) {
     }
     if (pages > 1) T('صفحة ' + (p + 1) + ' من ' + pages, 22, W / 2, H - 90, 'center', '#6d6354');
     paintMark(x, W, H, 0.12, doc.serial, doc.doc_date, logoImg);
-    if (p === pages - 1 && !isQ) {
+    if (p === pages - 1 && assets.qr) {
       let qx = L;
-      for (const k of ['wa', 'fb']) {
-        const src = assets.qr && assets.qr[k];
-        if (!src) continue;
-        try {
-          const qi = await loadImg(src);
-          x.fillStyle = '#fff';
-          x.fillRect(qx - 5, H - 215, 120, 120);
-          x.drawImage(qi, qx, H - 210, 110, 110);
-          T(k === 'wa' ? 'واتساب' : 'فيسبوك', 20, qx + 55, H - 84, 'center', '#6d6354');
-          qx += 140;
-        } catch (e) { /* تخطَّ الباركود */ }
-      }
+      for (const k of ['wa', 'fb']) { try { const qi = await loadImg(assets.qr[k]); x.fillStyle = '#fff'; x.fillRect(qx - 5, H - 215, 120, 120); x.drawImage(qi, qx, H - 210, 110, 110); T(k === 'wa' ? 'واتساب' : 'فيسبوك', 18, qx + 55, H - 84, 'center', '#6d6354'); qx += 140; } catch (e) { /* تخطَّ QR */ } }
     }
     out.push(c);
   }
@@ -178,7 +164,7 @@ export function boqLayout(doc, measure) {
   return { pages, grand, notesL };
 }
 
-async function boqCanvases(doc) {
+async function boqCanvases(doc, assets) {
   const logoImg = await ready();
   const W = 1240, H = 1754, R = W - 70, L = 70, cu = doc.currency || '';
   const pr = document.createElement('canvas').getContext('2d');
@@ -259,6 +245,7 @@ async function boqCanvases(doc) {
     }
     if (pages.length > 1) T('صفحة ' + (p + 1) + ' من ' + pages.length, 22, W / 2, H - 90, 'center', '#6d6354');
     paintMark(x, W, H, 0.12, doc.serial, doc.doc_date, logoImg);
+    if (p === pages.length - 1 && assets && assets.qr) { let qx = L; for (const k of ['wa', 'fb']) { try { const qi = await loadImg(assets.qr[k]); x.fillStyle = '#fff'; x.fillRect(qx - 5, H - 215, 120, 120); x.drawImage(qi, qx, H - 210, 110, 110); T(k === 'wa' ? 'واتساب' : 'فيسبوك', 18, qx + 55, H - 84, 'center', '#6d6354'); qx += 140; } catch (e) { /* تخطَّ QR */ } } }
     out.push(c);
   }
   return out;

@@ -1,5 +1,6 @@
 /* رسم ألبوم الصور */
 import { loadImg } from './util.js';
+import { fileUrl } from './api.js';
 import { ready, paintMark, newPage, txt, fit, canvasesToPdf, FONT } from './watermark.js';
 
 export const GRID = { 1: [1, 1], 2: [2, 1], 4: [2, 2], 6: [3, 2] };
@@ -7,6 +8,8 @@ export const GRID = { 1: [1, 1], 2: [2, 1], 4: [2, 2], 6: [3, 2] };
 /* m: { title, project, client, album_date, no, serial, per_page }  photos: [{src, cap}] */
 export async function albumCanvases(m, photos) {
   const logoImg = await ready();
+  const qrImg = {};
+  for (const k of ['wa', 'fb']) { if (m['qr_' + k + '_path']) { try { qrImg[k] = await loadImg(await fileUrl(m['qr_' + k + '_path'])); } catch (e) { /* تخطَّ QR */ } } }
   const W = 1240, H = 1754, R = W - 70, L = 70, out = [];
   {
     const [c, x] = newPage(W, H);
@@ -26,6 +29,7 @@ export async function albumCanvases(m, photos) {
     txt(x, 'عدد الصور: ' + photos.length, 32, W / 2, y, 'center', '#6d6354');
     txt(x, 'بوينت أب | Point Up', 36, W / 2, H - 190, 'center', '#1d1710', 700);
     paintMark(x, W, H, 0.1, m.serial, m.album_date, logoImg);
+    if (qrImg) { x.fillStyle = '#fff'; x.fillRect(L - 5, H - 215, 120, 120); x.drawImage(qrImg, L, H - 210, 110, 110); txt(x, 'QR Code الشركة', 18, L + 55, H - 84, 'center', '#6d6354'); }
     out.push(c);
   }
   const per = Number(m.per_page) || 4, [rn, cn] = GRID[per] || [2, 2], pn = Math.ceil(photos.length / per), gap = 22, y0 = 205, y1 = H - 110;
@@ -66,6 +70,7 @@ export async function albumCanvases(m, photos) {
     }
     if (pn > 1) txt(x, 'صفحة ' + (p + 1) + ' من ' + pn, 22, W / 2, H - 90, 'center', '#6d6354');
     paintMark(x, W, H, 0.1, m.serial, m.album_date, logoImg);
+    if (qrImg) { x.fillStyle = '#fff'; x.fillRect(L - 5, H - 215, 120, 120); x.drawImage(qrImg, L, H - 210, 110, 110); txt(x, 'QR Code الشركة', 18, L + 55, H - 84, 'center', '#6d6354'); }
     out.push(c);
   }
   return out;

@@ -40,7 +40,7 @@ ${isVoid ? `<div class="rc-void">⚠️ هذا الإيصال ملغي${r.void_r
 <p class="rc-terms"><b>أحكام الإيصال:</b> ١- يُعد هذا الإيصال مخالصة بقيمة المبلغ الوارد به فقط، ولا يُعتبر مخالصة نهائية عن باقي مستحقات الشركة. ٢- لا يُعتد بهذا الإيصال إلا إذا كان موقعًا من المستلم ومختومًا بخاتم الشركة. ٣- حُرر هذا الإيصال من نسختين، نسخة للعميل ونسخة للشركة.</p>
 <table class="cx-sg cx-keep"><tr><td><b>المستلم (بوينت أب)</b><br>${dot(r.received_by)}<br>التوقيع والختم:</td><td><b>المُسلِّم (العميل)</b><br>${dot(r.client)}<br>التوقيع:</td></tr></table>
 <div class="rc-ft">بوينت أب · Point Up</div>`;
-  const inner = headHtml(o.logo, coLines(r.company_snapshot || {})) + `<div class="cx-tt">إيصال استلام نقدية${o.copy ? ' <span class="rc-copy">نسخة</span>' : ''}</div>${body}`;
+  const inner = headHtml(o.logo, coLines(r.company_snapshot || {}), o.qr) + `<div class="cx-tt">إيصال استلام نقدية${o.copy ? ' <span class="rc-copy">نسخة</span>' : ''}</div>${body}`;
   const layer = isVoid ? '<div class="cx-void"><span>ملغي</span></div>' : '';
   return paperHtml({ po: o.po, wm: o.wm, serial, date: r.receipt_date, layer, cls: 'rc' + (o.tight ? ' rc-tight' : '') }, inner);
 }

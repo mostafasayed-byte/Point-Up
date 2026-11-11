@@ -40,7 +40,8 @@ export default function AlbumsTab({ active }) {
   const [send, setSend] = useState(null);
   const gal = useRef(null), cam = useRef(null);
 
-  const meta = () => ({ title: title.trim() || 'ألبوم صور', project: proj.trim(), client: client.trim(), client_phone: cphone.trim(), album_date: date || today(), per_page: parseInt(per, 10) || 4 });
+  const withQr = (album) => ({ ...album, qr_wa_path: app.settings.qr_wa_path || '', qr_fb_path: app.settings.qr_fb_path || '' });
+  const meta = () => ({ title: title.trim() || 'ألبوم صور', project: proj.trim(), client: client.trim(), client_phone: cphone.trim(), album_date: date || today(), per_page: parseInt(per, 10) || 4, qr_wa_path: app.settings.qr_wa_path || '', qr_fb_path: app.settings.qr_fb_path || '' });
 
   const addPhotos = async (files) => {
     if (issued) return setMsg(fail('اضغط "ألبوم جديد" أولاً.'));
@@ -78,7 +79,7 @@ export default function AlbumsTab({ active }) {
   };
 
   const exportPdf = async (album, getPhotos) => {
-    try { return { text: await doSave(album.no + '_' + album.serial + '.pdf', await albFile(album, getPhotos)) }; } catch (e) { console.error(e); return fail('تعذر التصدير: ' + errMsg(e)); }
+    try { return { text: await doSave(album.no + '_' + album.serial + '.pdf', await albFile(withQr(album), getPhotos)) }; } catch (e) { console.error(e); return fail('تعذر التصدير: ' + errMsg(e)); }
   };
 
   const issue = async () => {
@@ -127,7 +128,7 @@ export default function AlbumsTab({ active }) {
     }
   };
 
-  const sendFor = (album, getPhotos, count) => ({ title: 'الألبوم ' + album.no, text: albumText(album, count), phone: album.client_phone, pages: async () => albumCanvases(album, await getPhotos()) });
+  const sendFor = (album, getPhotos, count) => { const a = withQr(album); return { title: 'الألبوم ' + album.no, text: albumText(a, count), phone: a.client_phone, pages: async () => albumCanvases(a, await getPhotos()) }; };
 
   return (
     <>
@@ -233,9 +234,9 @@ function AlbumList({ active, onClone, exportPdf, sendFor, setSend }) {
       if (k === 'del') return setConfirmDel(a.id);
       setMsg(busy('جارٍ التجهيز…'));
       if (k === 'pdf') return setMsg(await exportPdf(a, get));
-      if (k === 'share') return setMsg(await shareFile(await albFile(a, get), msgText('ألبوم الصور', a.no)));
+      if (k === 'share') return setMsg(await shareFile(await albFile({ ...a, qr_wa_path: app.settings.qr_wa_path || '', qr_fb_path: app.settings.qr_fb_path || '' }, get), msgText('ألبوم الصور', a.no)));
       if (k === 'view') {
-        const cs = await albumCanvases(a, await get());
+        const cs = await albumCanvases({ ...a, qr_wa_path: app.settings.qr_wa_path || '', qr_fb_path: app.settings.qr_fb_path || '' }, await get());
         setView({ title: a.no, pages: cs.map((c) => toImgUrl(c, 0.8)) });
         setMsg(null);
       }

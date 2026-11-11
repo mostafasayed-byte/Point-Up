@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import BOQ_TPL from '../data/boq_template.json';
 import { arErr } from '../lib/supabase';
 import { issueDocument, saveSettings, uploadBlob, removeFiles, fileUrl, attachmentPaths } from '../lib/api';
-import { docCanvases, docAssets, QR_DEFAULT } from '../lib/docRender';
+import { docCanvases, docAssets } from '../lib/docRender';
 import { exportDoc, shareDoc, waDoc, sendOpts, prewarmDoc } from '../lib/docActions';
 import { toImgUrl } from '../lib/watermark';
 import { fmt, nz, today, totals, boqTotal, shrinkToBlob, uuid, getPref, setPref, errMsg, coFrom } from '../lib/util';
@@ -59,14 +59,16 @@ export default function InvoiceTab({ cloneReq }) {
 
   const uploadQr = async (k, f) => {
     if (!f) return;
-    setQrMsg((m) => ({ ...m, [k]: busy('جارٍ الرفع…') }));
+    setQrMsg((m) => ({ ...m, [k]: busy('جارٍ رفع QR Code…') }));
     let path = '';
     try {
-      const blob = await shrinkToBlob(f, 320, 0.9);
-      path = await uploadBlob(`${org.id}/branding/qr_${k}-${Date.now()}.jpg`, blob);
+      const blob = await shrinkToBlob(f, 420, 0.92);
+      path = await uploadBlob(`${org.id}/branding/qr-${k}-${Date.now()}.jpg`, blob);
+      const old = settings['qr_' + k + '_path'];
       const s = await saveSettings(org.id, { ...settings, ['qr_' + k + '_path']: path });
       app.setSettings(s);
-      setQrMsg((m) => ({ ...m, [k]: 'تم رفع الباركود.' }));
+      if (old && old !== path) removeFiles([old]);
+      setQrMsg((m) => ({ ...m, [k]: 'تم حفظ QR Code وسيظهر تلقائيًا في المستندات الجديدة والقابلة لإعادة الطباعة.' }));
     } catch (e) {
       if (path) removeFiles([path]);
       setQrMsg((m) => ({ ...m, [k]: fail('تعذر رفع الصورة: ' + arErr(e)) }));
@@ -240,7 +242,7 @@ export default function InvoiceTab({ cloneReq }) {
         ))}
       </nav>
       {type !== 'invoice' && (
-        <div className="note">{B ? 'المقايسة: تحمل اسم الشركة والعلامة المائية فقط، وتُصدَّر Excel وPDF مختوم. يمكنك إضافة أي بند أو تعديله قبل الإصدار.' : 'عرض السعر: حتى 30 سطراً، ويحمل اسم الشركة والعلامة المائية فقط، بدون السجل التجاري أو العنوان أو الباركودات.'}</div>
+        <div className="note">{B ? 'المقايسة: تحمل اسم الشركة والعلامة المائية وQR Code الشركة عند حفظه، وتُصدَّر Excel وPDF مختوم. يمكنك إضافة أي بند أو تعديله قبل الإصدار.' : 'عرض السعر: حتى 30 سطراً، ويحمل اسم الشركة والعلامة المائية وQR Code الشركة عند حفظه.'}</div>
       )}
 
       <section>
@@ -256,12 +258,12 @@ export default function InvoiceTab({ cloneReq }) {
           <input type="text" id="c_cr" className="ltr" value={co.cr} onChange={(e) => setCo({ ...co, cr: e.target.value })} />
           {['wa', 'fb'].map((k) => (
             <div key={k}>
-              <label htmlFor={'q_' + k}>{k === 'wa' ? 'باركود واتساب (صورة واضحة وكاملة)' : 'باركود فيسبوك (صورة)'}</label>
+              <label htmlFor={'q_' + k}>{k === 'wa' ? 'QR Code واتساب (يُرفع مرة واحدة ويظهر على كل المستندات)' : 'QR Code فيسبوك (يُرفع مرة واحدة ويظهر على كل المستندات)'}</label>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <QrThumb path={settings['qr_' + k + '_path']} fallback={QR_DEFAULT[k]} />
+                <QrThumb path={settings['qr_' + k + '_path']} />
                 <input type="file" id={'q_' + k} accept="image/*" onChange={(e) => { uploadQr(k, e.target.files[0]); e.target.value = ''; }} />
               </div>
-              <Msg m={qrMsg[k] || (settings['qr_' + k + '_path'] ? 'تم رفع الباركود.' : 'يُستخدم الباركود الافتراضي.')} />
+              <Msg m={qrMsg[k] || (settings['qr_' + k + '_path'] ? 'تم حفظ QR Code.' : 'اختياري: يمكنك رفعه لاحقًا من هنا.')} />
             </div>
           ))}
           <label htmlFor="c_cc">رمز الدولة لأرقام واتساب (مثال: 20 لمصر، 966 للسعودية)</label>
@@ -375,14 +377,14 @@ export default function InvoiceTab({ cloneReq }) {
   );
 }
 
-function QrThumb({ path, fallback }) {
-  const [src, setSrc] = useState(fallback);
+function QrThumb({ path }) {
+  const [src, setSrc] = useState('');
   useEffect(() => {
     let live = true;
     if (path) fileUrl(path).then((u) => live && setSrc(u)).catch(() => live && setSrc(fallback));
-    else setSrc(fallback);
+    else setSrc('');
     return () => { live = false; };
-  }, [path, fallback]);
-  return <img src={src} alt="الباركود الحالي" style={{ width: 56, height: 56, objectFit: 'contain', border: '1px solid var(--line)', borderRadius: 6, background: '#fff' }} />;
+  }, [path]);
+  return src ? <img src={src} alt="QR Code الحالي" style={{ width: 56, height: 56, objectFit: 'contain', border: '1px solid var(--line)', borderRadius: 6, background: '#fff' }} /> : <div className="qr-empty">لا يوجد</div>;
 }
 

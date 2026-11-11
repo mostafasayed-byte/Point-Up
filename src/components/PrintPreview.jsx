@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ready, LOGO_URL } from '../lib/watermark';
 import { PRINT_CSS, pageCss, wmTile, logoData, estimatePages, fullHtml } from '../lib/printDoc';
 import { doSave, waLink } from '../lib/files';
+import { fileUrl } from '../lib/api';
 import { copyText, errMsg } from '../lib/util';
 import { useApp, Msg, fail } from './common';
 
@@ -17,6 +18,7 @@ export default function PrintPreview({ fileName, serial, defaults, build, text, 
   const { settings } = useApp();
   const [po, setPo] = useState(() => ({ sz: 'A4', or: 'portrait', mg: 15, fs: 14, wm: true, ...defaults }));
   const [assets, setAssets] = useState(null);
+  const [qr, setQr] = useState({});
   const [panel, setPanel] = useState('');
   const [pages, setPages] = useState(0);
   const [tight, setTight] = useState(false);
@@ -25,15 +27,17 @@ export default function PrintPreview({ fileName, serial, defaults, build, text, 
 
   useEffect(() => {
     let off = false;
+    const toDataUrl = (url) => new Promise((resolve, reject) => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); resolve(c.toDataURL('image/png')); }; im.onerror = reject; im.src = url; });
+    Promise.all(['wa', 'fb'].map(async (k) => { const p = settings['qr_' + k + '_path']; if (!p) return [k, '/qr-' + k + '-default.jpg']; try { return [k, await toDataUrl(await fileUrl(p))]; } catch (e) { return [k, '/qr-' + k + '-default.jpg']; } })).then((xs) => !off && setQr(Object.fromEntries(xs)));
     ready()
       .then((im) => { if (!off) setAssets({ logo: logoData(im), wm: wmTile(im, serial, po) }); })
       .catch((e) => { console.error(e); if (!off) setAssets({ logo: LOGO_URL, wm: '' }); });
     return () => { off = true; };
-  }, [serial, po.sz, po.or, po.mg]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [serial, po.sz, po.or, po.mg, settings.qr_wa_path, settings.qr_fb_path]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setTight(false); }, [po]);
 
-  const html = assets ? build({ po, logo: assets.logo, wm: po.wm ? assets.wm : '', tight }) : '';
+  const html = assets ? build({ po, logo: assets.logo, wm: po.wm ? assets.wm : '', tight, qr }) : '';
 
   useEffect(() => {
     const el = ref.current && ref.current.querySelector('.cx-pg');

@@ -76,7 +76,7 @@ ${liveClauses(d).map((c, i) => `<div class="cx-c cx-keep"><b>البند (${i + 1
 ${d.notes.trim() ? `<div class="cx-nt cx-keep"><b>ملاحظة:</b><br>${nl(d.notes)}</div>` : ''}
 <div class="cx-keep"><p>حُرر هذا العقد من نسختين، بيد كل طرف نسخة للعمل بموجبها.</p>
 <table class="cx-sg"><tr><td><b>الطرف الأول${rep ? ' (النائب)' : ' (المالك)'}</b><br>الاسم: ${dot(p.name)}<br><br>التوقيع:</td><td><b>الطرف الثاني (المقاول)</b><br>شركة بوينت أب<br>الاسم: ${dot(p2.name)}<br><br>التوقيع والختم:</td></tr></table></div>`;
-  const inner = headHtml(o.logo, ['تشطيبات وديكور وتصميم']) + `<div class="cx-tt">عقد ${esc(d.ctype)}</div><div class="cx-con">${body}</div>`;
+  const inner = headHtml(o.logo, ['تشطيبات وديكور وتصميم'], o.qr) + `<div class="cx-tt">عقد ${esc(d.ctype)}</div><div class="cx-con">${body}</div>`;
   return paperHtml({ po: o.po, wm: o.wm, serial: o.serial, date: o.date }, inner);
 }
 

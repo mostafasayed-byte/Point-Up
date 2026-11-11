@@ -45,8 +45,9 @@ export function logoData(logoImg) {
 }
 
 /* رأس الورقة: اللوجو + اسم الشركة + سطور إضافية */
-export function headHtml(logo, lines) {
-  return `<div class="cx-hd"><img src="${esc(logo)}" alt="Point Up"><div><b>بوينت أب — شركة مقاولات عامة وتوريدات</b>${(lines || []).map((l) => `<div class="t">${l}</div>`).join('')}</div></div>`;
+export function headHtml(logo, lines, qr) {
+  const q = qr ? `<img class="cx-qr" src="${esc(qr)}" alt="QR Code الشركة">` : '';
+  return `<div class="cx-hd"><img src="${esc(logo)}" alt="Point Up"><div><b>بوينت أب — شركة مقاولات عامة وتوريدات</b>${(lines || []).map((l) => `<div class="t">${l}</div>`).join('')}</div>${q}</div>`;
 }
 
 /* الورقة كاملة. o: {po, wm, serial, date, layer, cls} و inner = المحتوى */
@@ -78,7 +79,7 @@ export const PRINT_CSS = `
 .cx-doc td,.cx-doc th{color:#222;border-color:#ddd;font-size:inherit}
 .cx-doc p{margin:4px 0}
 .cx-hd{display:flex;align-items:center;gap:12px;border-bottom:3px solid #a97608;padding-bottom:8px}
-.cx-hd img{width:150px;max-width:35%;height:auto}
+.cx-hd img{width:150px;max-width:35%;height:auto}.cx-hd .cx-qr{width:70px;height:70px;max-width:none;object-fit:contain;margin-inline-start:auto;border:1px solid #cdbf9f;padding:3px;background:#fff}
 .cx-hd .t{font-size:.85em;color:#6d6354}
 .cx-tt{text-align:center;color:#1d160a;font-size:1.3em;font-weight:800;margin:12px 0 6px}
 .cx-mt{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 18px;font-size:.93em;margin:6px 0}
