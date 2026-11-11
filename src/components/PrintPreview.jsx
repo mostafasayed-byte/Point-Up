@@ -5,7 +5,7 @@ import { PRINT_CSS, pageCss, wmTile, logoData, estimatePages, fullHtml } from '.
 import { doSave, waLink } from '../lib/files';
 import { fileUrl } from '../lib/api';
 import { copyText, errMsg } from '../lib/util';
-import { useApp, Msg, fail } from './common';
+import { useApp, Msg, busy, fail } from './common';
 
 const SIZES = [['A4', 'A4'], ['A5', 'A5'], ['Letter', 'Letter']];
 const ORIENT = [['portrait', 'طولي'], ['landscape', 'عرضي']];
@@ -63,6 +63,34 @@ export default function PrintPreview({ fileName, serial, defaults, build, text, 
     try { setMsg(await doSave(fileName + '.html', new Blob([file()], { type: 'text/html;charset=utf-8' }))); } catch (e) { setMsg(fail('تعذر الحفظ: ' + errMsg(e))); }
   };
 
+  const directPdf = async () => {
+    const el = ref.current && ref.current.querySelector('.cx-doc');
+    if (!el) return;
+    setMsg(busy('جارٍ إنشاء ملف PDF مباشر…'));
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import('html2canvas'), import('jspdf')]);
+      const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#fff', useCORS: true, logging: false });
+      const sizes = { A4: [210, 297], A5: [148, 210], Letter: [216, 279] };
+      let [pw, ph] = sizes[po.sz] || sizes.A4;
+      if (po.or === 'landscape') [pw, ph] = [ph, pw];
+      const pdf = new jsPDF({ orientation: po.or, unit: 'mm', format: [pw, ph], compress: true });
+      const sliceH = Math.max(1, Math.floor(canvas.width * ph / pw));
+      for (let y = 0, page = 0; y < canvas.height; y += sliceH, page++) {
+        if (page) pdf.addPage([pw, ph], po.or);
+        const h = Math.min(sliceH, canvas.height - y);
+        const slice = document.createElement('canvas');
+        slice.width = canvas.width; slice.height = h;
+        slice.getContext('2d').drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+        pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pw, h * pw / canvas.width, undefined, 'FAST');
+      }
+      pdf.save(fileName + '.pdf');
+      setMsg('تم تنزيل ملف PDF مباشرة.');
+    } catch (e) {
+      console.error(e);
+      setMsg(fail('تعذر إنشاء PDF مباشر: ' + errMsg(e)));
+    }
+  };
+
   const share = async (k) => {
     if (k === 'wa') {
       const w = window.open(waLink(phone, text, settings.cc), '_blank', 'noopener');
@@ -92,6 +120,7 @@ export default function PrintPreview({ fileName, serial, defaults, build, text, 
       <style>{PRINT_CSS + pageCss(po)}</style>
       <div className="noprint cx-bar">
         <button className="alt sm" type="button" onClick={onClose}>إغلاق ✕</button>
+        <button className="sm" type="button" disabled={!html} onClick={directPdf}>تحميل PDF مباشر</button>
         <button className="sm" type="button" disabled={!html} onClick={print}>طباعة / PDF</button>
         <button className="alt sm" type="button" onClick={() => tg('opts')}>خيارات الطباعة</button>
         <button className="alt sm" type="button" onClick={() => tg('shr')}>مشاركة</button>
